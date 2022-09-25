@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 
+const bycrypt = require('bcrypt')
 
-const userSchema = monggose.Schema({
+const userSchema = mongoose.Schema({
   name: {
     type: String,
     maxlength: 50
@@ -28,5 +29,25 @@ const userSchema = monggose.Schema({
   }
 })
 
+userSchema.pre('save', function (next) {
+
+  var user = this
+
+  if(user.isModified('password')) {
+    // encrypting the password
+    bycrypt.genSalt(saltRounds, function(err, salt) {
+      if(err) return next(err)
+
+      bycrypt.hash(user.password, salt, function(err, hash) {
+        if(err) return next(err)
+        user.password = hash
+        next()
+      })
+    })
+  }
+  
+})
+
 /* Model은 Schema를 감싸주는 역할 */ 
 const User = mongoose.model('User', userSchema)
+module.exports = { User }
